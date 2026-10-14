@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: Pelicanto API
+  version: 1.8.2
+  description: Transactional email API.
+servers:
+  - url: https://api.pelicanto.dev/v1
+security:
+  - bearerAuth: []
+paths:
+  /messages:
+    post:
+      summary: Send a message
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessage'
+      responses:
+        '202':
+          description: Message accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation error
+  /messages/{id}:
+    get:
+      summary: Get a message
+      operationId: getMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: Not found
+  /templates:
+    get:
+      summary: List templates
+      operationId: listTemplates
+      responses:
+        '200': { description: Templates }
+    post:
+      summary: Create a template
+      operationId: createTemplate
+      responses:
+        '201': { description: Created }
+  /webhooks:
+    post:
+      summary: Create a webhook endpoint
+      operationId: createWebhook
+      responses:
+        '201': { description: Created }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    SendMessage:
+      type: object
+      required: [to, from, subject]
+      properties:
+        to: { type: string, format: email }
+        from: { type: string, format: email }
+        subject: { type: string }
+        template_id: { type: string }
+        variables: { type: object, additionalProperties: { type: string } }
+        html: { type: string }
+        text: { type: string }
+    Message:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [queued, sent, delivered, bounced] }
+        created_at: { type: string, format: date-time }
